@@ -7,7 +7,7 @@ def legal_moves(board):
 def three_in_a_row(board): # Check for any three-in-a-rows and updates
     '''
     Input: np.array object representing board
-    Output: int of column to either win the game or stop opponent from winning
+    Output: list of column to either win the game or stop opponent from winning
 
     '''
     # Code to look for three-in-a-row
@@ -18,7 +18,7 @@ def three_in_a_row(board): # Check for any three-in-a-rows and updates
 def generate_move(board, player, saved_state):
     if sum(board) == 0: # if board is empty (all 0), return center column
         return 4
-    if three_in_a_row(board):  # look for winning or defending move
-        return three_in_a_row(board)
+    immediate_move = three_in_a_row(board)
+    if immediate_move: return immediate_move[0] # look for winning or defending move
 
     return legal_moves(board)[random.randint(0, len(legal_moves(board))-1)]
