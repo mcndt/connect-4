@@ -16,9 +16,9 @@ def three_in_a_row(board): # Check for any three-in-a-rows and updates
     pass
 
 def generate_move(board, player, saved_state):
-    return 4 if sum(board) == 0: # if board is empty (all 0), return center column
-
-
-    return three_in_a_row(board) if three_in_a_row(board) # look for winning or defending move
+    if sum(board) == 0: # if board is empty (all 0), return center column
+        return 4
+    if three_in_a_row(board):  # look for winning or defending move
+        return three_in_a_row(board)
 
     return legal_moves(board)[random.randint(0, len(legal_moves(board))-1)]
