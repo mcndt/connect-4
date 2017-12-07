@@ -10,15 +10,28 @@ import datetime
 from random import choice
 
 
-def current_player(board): # to-do: other method, this relies on a false assumption
+def current_player(states):
     '''
-    Input: board (np.array)
-    Method: if even number of moves so far, return (player) 1
+    Input: history of board (list of np.array)
+    Assumes: len(states) > 0
+    Method: bleh
     Output: player number (int) of whose turn it is
     '''
-    if len(np.where(board)[0])%2: return 1
-    else: return 2
-
+    current_state = states[-1]
+    turns_by_1 = np.count_nonzero(current_state == 1)
+    turns_by_2 = np.count_nonzero(current_state == 2)
+    if turns_by_1 > turns_by_2:
+        return 2
+    if turns_by_2 > turns_by_1:
+        return 1
+    # case if turns_by_1 == turns_by_2
+    previous_state = states[-2]
+    turns_by_1 = np.count_nonzero(previous_state == 1)
+    turns_by_2 = np.count_nonzero(previous_state == 2)
+    if turns_by_1 > turns_by_2:
+        return 1
+    if turns_by_2 > turns_by_1:
+        return 2
 
 def next_state(board, player, move):
     '''
@@ -62,7 +75,7 @@ def winner(board):
     '''
     for test in scan_board(board):
         if len(np.where(test)[0]) == 4:
-            if np.all(test == test[0])
+            if np.all(test == test[0]):
                 return test[0]
     else:
         return 0
@@ -81,7 +94,7 @@ class MonteCarlo(object):
 
     def update(self, state):
         # Takes a game state, and appends it to the history.
-
+        pass
 
     def get_play(self):
         # Causes the AI to calculate the best move from the
