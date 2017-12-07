@@ -250,7 +250,7 @@ def play_connect_four(challenger_mover, opponent_mover, nb_games=5):
 #        IMPORT YOUR OWN BOT PLAYERS BELOW          #
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! #
 
-from fun_bots.bot_2 import generate_move as random_mover
+from fun_bots.random_bot import generate_move as random_mover
 from query_bot import generate_move as query_mover
 
 # Include two generate_move functions below
