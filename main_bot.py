@@ -51,7 +51,7 @@ def legal_moves(board):
     # Takes a sequence of game states representing the full
     # game history, and returns the full list of moves that
     # are legal plays for the current player.
-    return np.arange(board.shape[1])[np.sum(board == 0, axis=0) > 0]
+    return np.arange(board.shape[1])[np.sum(board == 0, axis=0) > 0].tolist()
 
 
 def scan_board(board):
@@ -95,7 +95,6 @@ class MonteCarlo(object):
         # Takes an instance of a board and optionally some keyword
         # arguments.  Initializes the list of game states and the
         # statistics tables.
-        self.board = board
         self.board_history = kwargs.get('board_history', list())
         self.calculation_time = datetime.timedelta(seconds=kwargs.get('time', 0.5))
         self.max_moves = kwargs.get('max_moves', 100)
@@ -222,28 +221,29 @@ class MonteCarlo(object):
                 self.wins[(player, state)] += 1
 
 
-# HYPERPARAMETERS
-# time = amount of time allowed to run simulations.
-# max_moves = amount of moves ahead allowed in one simulation
-time = 0.8
-max_moves = 100
-
-
 def generate_move(board, player, saved_state=None):
+    # HYPERPARAMETERS
+    # time = amount of time allowed to run simulations.
+    # max_moves = amount of moves ahead allowed in one simulation
+    time = 0.8
+    max_moves = 100
+
+
     # if board is empty (all 0), return center column
-    if sum(board) == 0:
+    if np.all(board == 0):
         AI = MonteCarlo(board, time=time, max_moves=max_moves)
-        board[6, 3] = player
+        AI.update(board)
+        board[5, 3] = player
         AI.update(board)
         return 3, (AI.board_history, AI.plays, AI.wins)
 
     # After the first move, start running the MonteCarlo class
-    board_history, wins, plays = list(), dict(), dict()
+    board_history, plays, wins = list(), dict(), dict()
     if saved_state:
         board_history, wins, plays = saved_state
     AI = MonteCarlo(board, time=time, max_moves=max_moves,
                     board_history=board_history, wins=wins, plays=plays)
-
+    AI.update(board)
     move = AI.get_play()
     AI.update(next_state(move))
     return move, (AI.board_history, AI.plays, AI.wins)
