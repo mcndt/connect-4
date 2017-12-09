@@ -10,14 +10,14 @@ import datetime
 from random import choice
 
 
-def current_player(states):
+def current_player(board_history):
     '''
     Input: history of board (list of np.array)
     Assumes: len(states) > 0
     Method: bleh
     Output: player number (int) of whose turn it is
     '''
-    current_state = states[-1]
+    current_state = board_history[-1]
     turns_by_1 = np.count_nonzero(current_state == 1)
     turns_by_2 = np.count_nonzero(current_state == 2)
     if turns_by_1 > turns_by_2:
@@ -25,7 +25,7 @@ def current_player(states):
     if turns_by_2 > turns_by_1:
         return 1
     # case if turns_by_1 == turns_by_2
-    previous_state = states[-2]
+    previous_state = board_history[-2]
     turns_by_1 = np.count_nonzero(previous_state == 1)
     turns_by_2 = np.count_nonzero(previous_state == 2)
     if turns_by_1 > turns_by_2:
@@ -33,14 +33,16 @@ def current_player(states):
     if turns_by_2 > turns_by_1:
         return 2
 
-def next_state(board, player, move):
+
+def next_state(board_history, move):
     '''
     Input: board (np.array), player (int) whose turn it is, move (int) column
     Assumes: move is an element of legal_moves(board)
     Method: in move column, find largest index with 0 and replace with player number
     Output: next_board (np.array) with updated move
     '''
-    next_board = np.copy(board)
+    next_board = np.copy(board_history[-1])
+    player = current_player(board_history)
     next_board[np.where(next_board[:,move] == 0)[0][-1], move] = player
     return next_board
 
@@ -87,7 +89,7 @@ class MonteCarlo(object):
         # arguments.  Initializes the list of game states and the
         # statistics tables.
         self.board = board
-        self.states = list()
+        self.board_history = list()
         self.calculation_time = datetime.timedelta(seconds=kwargs.get('time', 30))
         self.max_moves = kwargs.get('max_moves', 100)
 
@@ -95,6 +97,7 @@ class MonteCarlo(object):
     def update(self, state):
         # Takes a game state, and appends it to the history.
         pass
+
 
     def get_play(self):
         # Causes the AI to calculate the best move from the
@@ -109,7 +112,7 @@ class MonteCarlo(object):
     def run_simulation(self):
         # Plays out a "random" game from the current position,
         # then updates the statistics tables with the result.
-        states_copy = self.states[:]
+        states_copy = self.board_history[:]
         state = states_copy[-1]
 
         for i in range(self.max_moves):
