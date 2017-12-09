@@ -8,6 +8,7 @@
 import numpy as np
 import datetime
 from random import choice
+from math import log, sqrt
 
 
 def current_player(board_history):
@@ -99,6 +100,7 @@ class MonteCarlo(object):
         self.board_history = list()
         self.calculation_time = datetime.timedelta(seconds=kwargs.get('time', 30))
         self.max_moves = kwargs.get('max_moves', 100)
+        self.C = kwargs.get('C', 1.4)
 
         self.wins = dict()
         self.plays = dict()
@@ -164,6 +166,8 @@ class MonteCarlo(object):
     def run_simulation(self):
         # Plays out a "random" game from the current position,
         # then updates the statistics tables with the result.
+        plays, wins = self.plays, self.wins
+
         visited_states = set()
         history_copy = self.board_history[:]
         state = history_copy[-1]
@@ -172,8 +176,24 @@ class MonteCarlo(object):
         expand = True
         for i in range(self.max_moves):
             legal = legal_moves(state)
-            move = choice(legal)
-            state = next_state(history_copy, move)
+            move_states = [(p, next_state(history_copy, p)) for p in legal]
+
+            if all(plays.get((player, S)) for p, S in move_states):
+                # If there are statistics on all of the legal moves, use them.
+                # applies the UCB1 formula: xi +- sqrt( 2 ln(n) / ni ) with:
+                # xi = mean payout for move i
+                # ni = #plays on move i
+                # n  = #plays in total
+                log_total = log(sum(plays[(player, S)] for p, S in moves_states))
+                value, move, state = max(
+                    ((wins[(player, S)] / plays[(player, S)]) +
+                     self.C * sqrt(log_total / plays[(player, S)]), p, S)
+                    for p, S in moves_states
+                )
+            else:
+                # If there are no stats on this move, make an arbitrary decision
+                move, state = choice(move_states)
+
             history_copy.append(state)
 
             # add dictionary entries for newly found game state
@@ -181,6 +201,8 @@ class MonteCarlo(object):
                 expand = False
                 self.plays[(player, state)] = 0
                 self.wins[(player, state)] = 0
+                if i > self.max_depth:
+                    self.max_depth = i
 
             visited_states.add((player, state))
 
@@ -199,16 +221,6 @@ class MonteCarlo(object):
             # update win value for given game state
             if player == winner:
                 self.wins[(player, state)] += 1
-
-
-
-
-
-
-
-
-
-
 
 
 def generate_move(board, player, saved_state):
