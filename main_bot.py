@@ -72,20 +72,27 @@ def scan_board(board):
 def winner(board):
     '''
     Input: board (np.array)
-    Method:
-    Output: 0 if no winner, 1 if player 1 wins, 2 if player 2 wins
+    Output:
+        0 if no winner,
+        1 if player 1 wins,
+        2 if player 2 wins,
+        -1 if tie. (full board)
     '''
     for test in scan_board(board):
         if len(np.where(test)[0]) == 4:
+            # if a winner is found
             if np.all(test == test[0]):
                 return test[0]
+    # if the game was tied
+    if 0 not in board:
+        return -1
     else:
         return 0
 
 
 class MonteCarlo(object):
     def __init__(self, board, **kwargs):
-        # Takes an instance of a Board and optionally some keyword
+        # Takes an instance of a board and optionally some keyword
         # arguments.  Initializes the list of game states and the
         # statistics tables.
         self.board = board
@@ -93,39 +100,105 @@ class MonteCarlo(object):
         self.calculation_time = datetime.timedelta(seconds=kwargs.get('time', 30))
         self.max_moves = kwargs.get('max_moves', 100)
 
+        self.wins = dict()
+        self.plays = dict()
 
-    def update(self, state):
+
+    def update(self, board):
         # Takes a game state, and appends it to the history.
-        pass
+        self.board_history.append(board)
 
 
     def get_play(self):
         # Causes the AI to calculate the best move from the
         # current game state and return it.
+        self.max_depth = 0
+        state = self.board_history[-1]
+        player = current_player(state)
+        legal = legal_moves(state)
+
+        # If there's no legal moves, don't bother
+        if not legal:
+            return
+        # if there's only one choice anyways
+        if len(legal) == 1:
+            return legal[0]
+
+        games = 0
         begin = datetime.datetime.utcnow()
+        # Runs simulations as long as is allowed by hyperparameter 'time'
+        # this should be less than 1.0 sec to conform to competition rules.
         while datetime.datetime.utcnow() - begin <self.calculation_time:
-            # Runs simulations as long as is allowed by hyperparameter 'time'
-            # this should be less than 1.0 sec to conform to competition rules.
             self.run_simulation()
+            games += 1
+
+        moves_states = [(move, next_state(state, move)) for move in legal]
+
+        # Print the number of simulations ran and time elapsed
+        print(games, datetime.datetime.utcnow() - begin())
+
+        # pick the move with the highest percentage of wins
+        win_rate, move = max(
+            (self.wins.get((player, S), 0) /
+             self.plays.get((player, S), 1),
+             p)
+            for p, S in moves_states
+        )
+
+        # Display the stats for each legal move possible
+        for x in sorted(
+                ((100 * self.wins.get((player, S), 0) /
+                      self.plays.get((player, S), 1),
+                  self.wins.get((player, S), 0),
+                  self.plays.get((player, S), 0), p)
+                 for p, S in moves_states),
+                reverse=True
+        ):
+            print('Column {3}: {0:.2f}%% ({1} / {2})'.format(*x))
+
+        print('Max depth searched:', self.max_depth)
+
+        return move
 
 
     def run_simulation(self):
         # Plays out a "random" game from the current position,
         # then updates the statistics tables with the result.
+        visited_states = set()
         history_copy = self.board_history[:]
-        board = history_copy[-1]
+        state = history_copy[-1]
+        player = current_player(state)
 
+        expand = True
         for i in range(self.max_moves):
-            # in the article, it says legal_moves(states_copy)
-            legal = legal_moves(board)
+            legal = legal_moves(state)
             move = choice(legal)
             state = next_state(history_copy, move)
             history_copy.append(state)
 
-            winner = winner(board)
+            # add dictionary entries for newly found game state
+            if expand and (player, state) not in self.plays:
+                expand = False
+                self.plays[(player, state)] = 0
+                self.wins[(player, state)] = 0
+
+            visited_states.add((player, state))
+
+            player = current_player(state)
+            winner = winner(state)
             if winner:
                 break
 
+        for (player, state) in visited_states:
+            if (player, state) not in self.plays:
+                continue # move along, nothing to see here
+
+            # update occurrence value for given game state
+            self.plays[(player, state)] += 1
+            # if game state led to a win for this player,
+            # update win value for given game state
+            if player == winner:
+                self.wins[(player, state)] += 1
 
 
 
