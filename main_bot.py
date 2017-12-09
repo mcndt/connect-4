@@ -112,21 +112,19 @@ class MonteCarlo(object):
     def run_simulation(self):
         # Plays out a "random" game from the current position,
         # then updates the statistics tables with the result.
-        states_copy = self.board_history[:]
-        state = states_copy[-1]
+        history_copy = self.board_history[:]
+        board = history_copy[-1]
 
         for i in range(self.max_moves):
             # in the article, it says legal_moves(states_copy)
-            legal = legal_moves(state)
+            legal = legal_moves(board)
             move = choice(legal)
-            state = next_state(board, player, move)
-            states_copy.append(state)
+            state = next_state(history_copy, move)
+            history_copy.append(state)
 
-            winner = winner(state)
+            winner = winner(board)
             if winner:
                 break
-
-            # to-do: make the function know who's playing for the next state
 
 
 
