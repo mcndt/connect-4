@@ -175,7 +175,7 @@ class MonteCarlo(object):
                  for p, S in moves_states),
                 reverse=True
         ):
-            print('Column {3}: {0:.2f}%% ({1} / {2})'.format(*x))
+            print('Column {3}: {0:.2f}% ({1} / {2})'.format(*x))
 
         print('Max depth searched:', self.max_depth)
 
@@ -245,8 +245,8 @@ def generate_move(board, player, saved_state=None):
     # HYPERPARAMETERS
     # time = amount of time allowed to run simulations.
     # max_moves = amount of moves ahead allowed in one simulation
-    time = 0.8
-    max_moves = 100
+    time = 0.9
+    max_moves = 200
 
 
     # if board is empty (all 0), return center column
@@ -260,7 +260,7 @@ def generate_move(board, player, saved_state=None):
     # After the first move, start running the MonteCarlo class
     board_history, plays, wins = list(), dict(), dict()
     if saved_state:
-        board_history, wins, plays = saved_state
+        board_history, plays, wins = saved_state
     AI = MonteCarlo(board, time=time, max_moves=max_moves,
                     board_history=board_history, wins=wins, plays=plays)
     AI.update(board)
