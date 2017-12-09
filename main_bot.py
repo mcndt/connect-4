@@ -10,7 +10,6 @@ import datetime
 from random import choice
 from math import log, sqrt
 
-
 def current_player(board_history):
     '''
     Input: history of board (list of np.array)
@@ -97,13 +96,13 @@ class MonteCarlo(object):
         # arguments.  Initializes the list of game states and the
         # statistics tables.
         self.board = board
-        self.board_history = list()
-        self.calculation_time = datetime.timedelta(seconds=kwargs.get('time', 30))
+        self.board_history = kwargs.get('board_history', list())
+        self.calculation_time = datetime.timedelta(seconds=kwargs.get('time', 0.5))
         self.max_moves = kwargs.get('max_moves', 100)
         self.C = kwargs.get('C', 1.4)
 
-        self.wins = dict()
-        self.plays = dict()
+        self.wins = kwargs.get('wins', dict())
+        self.plays = kwargs.get('plays', dict())
 
 
     def update(self, board):
@@ -223,8 +222,28 @@ class MonteCarlo(object):
                 self.wins[(player, state)] += 1
 
 
-def generate_move(board, player, saved_state):
-    if sum(board) == 0: # if board is empty (all 0), return center column
-        return 3
+# HYPERPARAMETERS
+# time = amount of time allowed to run simulations.
+# max_moves = amount of moves ahead allowed in one simulation
+time = 0.8
+max_moves = 100
 
-    return choice(legal_moves(board))
+
+def generate_move(board, player, saved_state=None):
+    # if board is empty (all 0), return center column
+    if sum(board) == 0:
+        AI = MonteCarlo(board, time=time, max_moves=max_moves)
+        board[6, 3] = player
+        AI.update(board)
+        return 3, (AI.board_history, AI.plays, AI.wins)
+
+    # After the first move, start running the MonteCarlo class
+    board_history, wins, plays = list(), dict(), dict()
+    if saved_state:
+        board_history, wins, plays = saved_state
+    AI = MonteCarlo(board, time=time, max_moves=max_moves,
+                    board_history=board_history, wins=wins, plays=plays)
+
+    move = AI.get_play()
+    AI.update(next_state(move))
+    return move, (AI.board_history, AI.plays, AI.wins)
