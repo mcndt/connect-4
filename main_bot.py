@@ -36,7 +36,7 @@ def current_player(board_history):
 
 def next_state(board_history, move):
     '''
-    Input: board (np.array), player (int) whose turn it is, move (int) column
+    Input: board_history (list of np.array), player (int) whose turn it is, move (int) column
     Assumes: move is an element of legal_moves(board)
     Method: in move column, find largest index with 0 and replace with player number
     Output: next_board (np.array) with updated move
@@ -135,7 +135,7 @@ class MonteCarlo(object):
         # current game state and return it.
         self.max_depth = 0
         state = self.board_history[-1]
-        player = current_player(state)
+        player = current_player(self.board_history)
         legal = legal_moves(state)
 
         # If there's no legal moves, don't bother
@@ -189,7 +189,7 @@ class MonteCarlo(object):
 
         visited_states = set()
         history_copy = self.board_history[:]
-        player = current_player(history_copy[-1])
+        player = current_player(history_copy)
 
         expand = True
         for i in range(self.max_moves):
