@@ -223,8 +223,8 @@ class MonteCarlo(object):
                     self.max_depth = i
 
             visited_states.add((player, state))
-
-            player = current_player(str_to_state(state))
+            history_copy.append(str_to_state(state))
+            player = current_player(history_copy)
             winner = find_winner(str_to_state(state))
             if winner:
                 break
